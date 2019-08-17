@@ -1,6 +1,6 @@
 #!/bin/bash
 pname=$(basename "$0")
-usage="$pname [Keyword]
+usage="$pname [-borsu] [Keyword]
 $pname {-h|--help}
   keyword:
     1
@@ -12,9 +12,35 @@ $pname {-h|--help}
     device
     transport_id
     ... etc."
-case "$1" in
--*) echo "$usage"; exit 1;;
-esac
+bootloaderp=0
+offlinep=0
+recoveryp=0
+sideloadp=0
+unauthorizedp=0
+while true; do
+  case "$1" in
+  -b|--bootloader) shift; bootloaderp=1;;
+  -o|--offline) shift; offlinep=1;;
+  -r|--recovery) shift; recoveryp=1;;
+  -s|--sideload) shift; sideloadp=1;;
+  -u|--unauthorized) shift; unauthorizedp=1;;
+  -*)
+    for ((i=1; i<${#1}; i++)); do
+      c=${1:$i:1}
+      case $c in
+      b) bootloaderp=1;;
+      o) offlinep=1;;
+      r) recoveryp=1;;
+      s) sideloadp=1;;
+      u) unauthorizedp=1;;
+      ?) echo "$c: unknown option.">&2; exit 1;;
+      esac
+    done
+    shift
+    ;;
+  *) break;;
+  esac
+done
 
 keyword="$1"
 case "$keyword" in
@@ -28,20 +54,49 @@ if tty -s; then
 else
   cat -
 fi | awk '
-  $2=="device" || $2=="unauthorized" || $2=="offline" || $2=="bootloader"{
-    n = n+1; if (n>=2) {
-      print "Two or more remote adb devices connected.">"/dev/stderr"
-      exit 3
+  BEGIN { word = ""; n=0 }
+  $0 == "List of devices attached" { next;}
+  $2 != "" {
+    state = $2
+    n = n+1; if (n>=2) exit;
+    if ('"$keyword"' ~ /^[0-9]+$/) {
+      word = $'"$keyword"'
+      exit
     }
-    if ('"$keyword"' ~ /^[0-9]+$/) { print $'"$keyword"'; exit }
     for (i=1; i<=NF; i++) {
       if (match($i, /^'"$keyword"':(.*)$/, arr) > 0) {
-        print arr[1]; exit
+        word = arr[1]
+        exit
       }
     }
   }
-  END { if (n==0) {
-    print "No remote adb device connected.">"/dev/stderr"
-    exit 4
-  }}
+  END {
+    if (n == 0) {
+      print "No remote adb device connected.">"/dev/stderr"
+      exit 2
+    } else if (n == 1) {
+      if (state == "bootloader" && '$bootloaderp') {
+        print "Device is in bootloader mode.">"/dev/stderr"
+        exit 4
+      } else if (state == "offline" && '$offlinep') {
+        print "Device offline.">"/dev/stderr"
+        exit 5
+      } else if (state == "recovery" && '$recoveryp') {
+        print "Device is in recovery mode.">"/dev/stderr"
+        exit 6
+      } else if (state == "sideload" && '$sideloadp') {
+        print "Device is in sideload mode.">"/dev/stderr"
+        exit 7
+      } else if (state == "unauthorized" && '$unauthorizedp') {
+        print "Device unauthorized.">"/dev/stderr"
+        exit 8
+      } else {
+        print word
+        exit 0
+      }
+    } else {
+      print "Two or more remote adb devices connected.">"/dev/stderr"
+      exit 3
+    }
+  }
 '

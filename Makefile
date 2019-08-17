@@ -1,15 +1,18 @@
-# Makefile for copy-android-apps
+# Makefile for adbtools
 
 INSTDIR=~/bin
+INSTFILES=$(SRCS) $(HARDLINKS)
+SRCS=adb-parsedev adb-sendkey adb_shell
+HARDLINKS=adb_echo_result adb_return_result
 
-install: adb-parsedev adb-sendkey adb_shell adb_echo_result adb_return_result
+install: $(INSTFILES)
 	tar -cf - $^ | (cd $(INSTDIR); tar -xvf -)
 
-diff: adb-sendkey adb_echo_result adb_return_result adb_shell
+diff: $(SRCS)
 	$(foreach i,$^,diff -u $(INSTDIR)/$i $i;)
 
-adb_echo_result adb_return_result: adb_shell
+$(HARDLINKS): adb_shell
 	ln $< $@
 
-
-
+clean:
+	rm -f $(HARDLINKS)

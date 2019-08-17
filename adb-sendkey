@@ -2,7 +2,71 @@
 pnam=$(basename "$0")
 usage="$pnam [-b] [-n] [-v] KeySequence
 $pnam {-h|--help}
-"
+"'
+OPTIIONS
+  -b
+    buffering the keyboard input.
+  -n
+    Dry run mode. Execute without sending actual keyboard signals to the Android device.
+  -v
+    Verbose mode. Echo each key input event and buffering events.
+  KeySequence
+    A string of following elements:
+      Raw character: following characters accepted.
+        0123456789
+        abcdefghijklmnopqrstuvwxyz
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        *#,. `-=[]\;'\''/@+
+      <Symbol>: following Symbols accepted.
+    xmenu
+    soft_right
+    home
+    back
+    call
+    endcall
+    dpad_up
+    dpad_down
+    dpad_left
+    dpad_right
+    dpad_center
+    volume_up
+    volume_down
+    power
+    camera
+    clear
+    alt_left
+    alt_right
+    shift_left
+    shift_right
+    tab
+    space
+    sym
+    explorer
+    envelope
+    enter
+    del
+    num|numlock
+    headsethook
+    focus
+    menu
+    notification
+    search
+    star
+    pound
+    comma
+    period
+    grave
+    minus
+    equals
+    left_bracket
+    right_bracket
+    backslash
+    semicoron
+    apostrophe
+    slash
+    at
+    plus
+'
 
 adb_shell_input_keyevent() {
   $verbose && echo "adb shell input keyevent $1"
