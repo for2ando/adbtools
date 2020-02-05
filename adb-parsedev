@@ -1,5 +1,6 @@
 #!/bin/bash
 pname=$(basename "$0")
+dname=$(dirname "$0")
 usage="$pname [-borsu] [Keyword]
 $pname {-h|--help}
   keyword:
@@ -42,6 +43,10 @@ while true; do
   esac
 done
 
+source "$dname/globmatch.sh"
+source "$dname/run.sh"
+source "$dname/adbwrappers.sh"
+
 keyword="$1"
 case "$keyword" in
 '') keyword="model";;
@@ -50,7 +55,7 @@ state) keyword="2";;
 esac
 
 if tty -s; then
-  adb devices -l
+  _adb devices -l
 else
   cat -
 fi | awk '
