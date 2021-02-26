@@ -60,6 +60,7 @@ else
   cat -
 fi | awk '
   BEGIN { word = ""; n=0 }
+  /\r$/ { $0 = substr($0, 1, length($0)-1) }
   $0 == "List of devices attached" { next;}
   $2 != "" {
     state = $2
